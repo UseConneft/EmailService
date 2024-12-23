@@ -59,7 +59,7 @@ func SendPasswordRecoveryMailWithOTP(domain, apiKey, recipient, reset_otp string
 	return id, err
 }
 
-func SendWaitlistWelcomeEmail(domain, apiKey, recipient string) (string, error) {
+func SendWaitlistWelcomeEmail(domain, apiKey, recipient, username string) (string, error) {
 	mg := mailgun.NewMailgun(domain, apiKey)
 
 	m := mailgun.NewMessage(
@@ -70,10 +70,10 @@ func SendWaitlistWelcomeEmail(domain, apiKey, recipient string) (string, error) 
 	)
 
 	// Get username from email
-	firstName, err := extractUsername(recipient)
-	if err != nil {
-		return "", err
-	}
+	// firstName, err := extractUsername(recipient)
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	// Open and attach the images
 	headerFile, err := os.Open("./header.jpg")
@@ -108,11 +108,11 @@ func SendWaitlistWelcomeEmail(domain, apiKey, recipient string) (string, error) 
             <p>Stay tuned for exciting updates, early access offers, and sneak peeks leading up to our launch. You're part of something big, and we can't wait to share it all with you.</p>
             <p><b>Quick Tip:</b> If you find this email in your spam or promotions folder, kindly mark us as "Not Spam" and move us to your inbox. This ensures you won't miss out on exclusive updates!</p>
             <p>Thank you for being part of the Conneft community. The future of connection starts here!</p>
-            <img src="cid:footer" alt="Footer Image" style="width: 100%%;" />
             <p>Warm Regards,</p>
             <p><b>The Conneft Team</b></p>
+            <img src="cid:footer" alt="Footer Image" style="width: 100%%;" />
         </div>
-    `, firstName))
+    `, username))
 
 	// Set a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -140,6 +140,12 @@ func SendWaitlistWelcomeEmailHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
 		return
 	}
+	username := c.Param("username")
+	if username == ""{
+		log.Println("username is required")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "username is required"})
+		return
+	}
 	apiKey := os.Getenv("MAILGUN_API_KEY")
 	if apiKey == "" {
 		log.Println("MAILGUN_API_KEY is not set or empty")
@@ -148,7 +154,7 @@ func SendWaitlistWelcomeEmailHandler(c *gin.Context) {
 	}
 
 	// Send the welcome email
-	id, err := SendWaitlistWelcomeEmail("mail.conneft.com", apiKey, email)
+	id, err := SendWaitlistWelcomeEmail("mail.conneft.com", apiKey, email, username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -175,6 +181,6 @@ func main() {
 
 	// Initialize the Gin router
 	r := gin.Default()
-	r.POST("/waitlist/send-email/:email", SendWaitlistWelcomeEmailHandler)
+	r.POST("/waitlist/send-email/:email/:username", SendWaitlistWelcomeEmailHandler)
 	r.Run(":8073")
 }
