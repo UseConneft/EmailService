@@ -1,0 +1,208 @@
+// package main
+
+// import (
+// 	"context"
+// 	"encoding/base64"
+// 	"fmt"
+// 	"io/ioutil"
+// 	"log"
+// 	"os"
+// 	"time"
+
+// 	"github.com/joho/godotenv"
+// 	"github.com/mailersend/mailersend-go"
+// )
+
+// func init() {
+// 	// Load environment variables from .env file
+// 	if err := godotenv.Load(); err != nil {
+// 		log.Fatalf("Error loading .env file: %v", err)
+// 	}
+// }
+
+// func main() {
+// 	// Replace this with your actual API Key
+// 	apiKey := os.Getenv("MAILERSEND_API_KEY")
+// 	if apiKey == "" {
+// 		log.Fatal("MAILERSEND_API_KEY is not set. Please set it as an environment variable.")
+// 	}
+
+// 	// Initialize MailerSend client
+// 	ms := mailersend.NewMailersend(apiKey)
+
+// 	// Create context with timeout
+// 	ctx := context.Background()
+// 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+// 	defer cancel()
+
+// 	// Email details
+// 	subject := "You’re In! Here’s How to Stay Connected with Conneft 🚀"
+// 	text := `
+// 		Hello Jason,
+
+// 		Welcome to Conneft! 🎉
+
+// 		You’ve taken the first step toward a new era of networking — where physical and digital connections meet effortlessly on one platform. We're thrilled to have you on this journey as we redefine how meaningful connections are made.
+
+// 		Here’s What’s Coming Your Way:
+// 		✨ Tap-to-Connect Simplicity: Share who you are and what you do effortlessly.
+// 		🌟 Build Your Social Presence: Stand out in any room — digitally and physically.
+// 		🚀 Early Access: Be the first to experience cutting-edge features built for the future of networking.
+
+// 		Stay tuned for exciting updates, early access offers, and sneak peeks leading up to our launch. You’re part of something big, and we can’t wait to share it all with you.
+
+// 		Quick Tip: If you find this email in your spam or promotions folder, kindly mark us as “Not Spam” and move us to your inbox. This ensures you won’t miss out on exclusive updates!
+
+// 		Thank you for being part of the Conneft community. The future of connection starts here!
+
+// 		Best Regards,
+// 		The Conneft Team
+// 	`
+
+// 	html := `
+// 		<div>
+// 			<img src="cid:header.jpg" alt="Header Image" style="width: 100%;"/>
+// 			<h1>Welcome to Conneft! 🎉</h1>
+// 			<p>Hello Jason,</p>
+// 			<p>
+// 				You’ve taken the first step toward a new era of networking — where physical and digital connections meet effortlessly on one platform. We're thrilled to have you on this journey as we redefine how meaningful connections are made.
+// 			</p>
+// 			<h2>Here’s What’s Coming Your Way:</h2>
+// 			<ul>
+// 				<li>✨ <b>Tap-to-Connect Simplicity:</b> Share who you are and what you do effortlessly.</li>
+// 				<li>🌟 <b>Build Your Social Presence:</b> Stand out in any room — digitally and physically.</li>
+// 				<li>🚀 <b>Early Access:</b> Be the first to experience cutting-edge features built for the future of networking.</li>
+// 			</ul>
+// 			<p>
+// 				Stay tuned for exciting updates, early access offers, and sneak peeks leading up to our launch. You’re part of something big, and we can’t wait to share it all with you.
+// 			</p>
+// 			<p>
+// 				<b>Quick Tip:</b> If you find this email in your spam or promotions folder, kindly mark us as “Not Spam” and move us to your inbox. This ensures you won’t miss out on exclusive updates!
+// 			</p>
+// 			<img src="cid:footer.jpg" alt="Footer Image" style="width: 100%;"/>
+// 			<p>Thank you for being part of the Conneft community. The future of connection starts here!</p>
+// 			<p>Best Regards,</p>
+// 			<p><b>The Conneft Team</b></p>
+// 		</div>
+// 	`
+
+// 	// Sender details
+// 	from := mailersend.From{
+// 		Name:  "Conneft Team",
+// 		Email: "support@granularx.com", // Ensure this email is verified in MailerSend
+// 	}
+
+// 	// Recipient details
+// 	recipients := []mailersend.Recipient{
+// 		{
+// 			Name:  "Jason",
+// 			Email: "jason.charles@granularx.com",
+// 		},
+// 	}
+
+// 	// Create attachments for header and footer images
+// 	attachments, err := createAttachments([]string{"./header.jpg", "./footer.jpg"}, []string{"header.jpg", "footer.jpg"})
+// 	if err != nil {
+// 		log.Fatalf("Failed to create attachments: %v", err)
+// 	}
+
+// 	// Create the email message
+// 	message := ms.Email.NewMessage()
+// 	message.SetFrom(from)
+// 	message.SetRecipients(recipients)
+// 	message.SetSubject(subject)
+// 	message.SetHTML(html)
+// 	message.SetText(text)
+
+// 	// Attach images to the message
+// 	for _, attachment := range attachments {
+// 		message.AddAttachment(attachment)
+// 	}
+
+// 	// Send the email
+// 	res, err := ms.Email.Send(ctx, message)
+// 	if err != nil {
+// 		log.Fatalf("Failed to send email: %v", err)
+// 	}
+
+// 	// Log the message ID
+// 	fmt.Printf("Email sent successfully! Message ID: %s\n", res.Header.Get("X-Message-Id"))
+// }
+
+// // Helper function to create Base64 encoded attachments
+// func createAttachments(paths []string, filenames []string) ([]mailersend.Attachment, error) {
+// 	if len(paths) != len(filenames) {
+// 		return nil, fmt.Errorf("paths and filenames arrays must have the same length")
+// 	}
+
+// 	var attachments []mailersend.Attachment
+// 	for i, path := range paths {
+// 		content, err := ioutil.ReadFile(path)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed to read file %s: %v", path, err)
+// 		}
+
+// 		base64Content := base64.StdEncoding.EncodeToString(content)
+// 		attachments = append(attachments, mailersend.Attachment{
+// 			Content:     base64Content,
+// 			Filename:    filenames[i],
+// 			Disposition: "inline", // This ensures the image is embedded
+// 		})
+// 	}
+
+// 	return attachments, nil
+// }
+// func SendWaitlistWelcomeEmail(domain, apiKey, recipient string) (string, error) {
+// 	// Initialize Mailgun client
+// 	mg := mailgun.NewMailgun(domain, apiKey)
+
+// 	// Read header and footer image paths
+// 	headerCID := "./header.jpg"
+// 	footerCID := "./footer.jpg"
+
+// 	// Create the email message
+// 	m := mailgun.NewMessage(
+// 		"Conneft Team <no-reply@mail.conneft.com>",  // Correct format                    // Sender email
+// 		"You’re In! Here’s How to Stay Connected with Conneft 🚀", // Subject
+// 		"",        // Plain text body (optional)
+// 		recipient, // Recipient email
+// 	)
+// 	firstName, err := extractUsername(recipient)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	// Include HTML content
+// 	m.SetHTML(fmt.Sprintf(`
+// 		<div>
+// 			<img src="cid:%s" alt="Header Image" style="width: 100%%;" />
+// 			<h1>Welcome to Conneft! 🎉</h1>
+// 			<p>Hello %s,</p>
+// 			<p>You’ve taken the first step toward a new era of networking — where physical and digital connections meet effortlessly on one platform. We're thrilled to have you on this journey as we redefine how meaningful connections are made.</p>
+// 			<h2>Here’s What’s Coming Your Way:</h2>
+// 			<ul>
+// 				<li>✨ <b>Tap-to-Connect Simplicity:</b> Share who you are and what you do effortlessly.</li>
+// 				<li>🌟 <b>Build Your Social Presence:</b> Stand out in any room — digitally and physically.</li>
+// 				<li>🚀 <b>Early Access:</b> Be the first to experience cutting-edge features built for the future of networking.</li>
+// 			</ul>
+// 			<p>Stay tuned for exciting updates, early access offers, and sneak peeks leading up to our launch. You’re part of something big, and we can’t wait to share it all with you.</p>
+// 			<p><b>Quick Tip:</b> If you find this email in your spam or promotions folder, kindly mark us as “Not Spam” and move us to your inbox. This ensures you won’t miss out on exclusive updates!</p>
+// 			<p>Thank you for being part of the Conneft community. The future of connection starts here!</p>
+// 			<img src="cid:%s" alt="Footer Image" style="width: 100%%;" />
+// 			<p>Warm Regards,</p>
+// 			<p><b>The Conneft Team</b></p>
+// 		</div>
+// 	`, headerCID, firstName, footerCID))
+
+// 	// Attach header and footer images
+// 	m.AddInline(headerCID)
+// 	m.AddInline(footerCID)
+
+// 	// Set a context with a timeout
+// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+// 	defer cancel()
+
+// 	// Send the email
+// 	_, id, err := mg.Send(ctx, m)
+// 	return id, err
+// }
